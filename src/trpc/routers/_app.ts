@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
+import { inngest } from "@/inngest/client";
 
 export const appRouter = createTRPCRouter({
   getUsers: protectedProcedure.query(({ ctx }) => {
@@ -10,6 +11,16 @@ export const appRouter = createTRPCRouter({
       },
     });
   }),
+  createWorkflows: protectedProcedure.mutation(async () => {
+    await inngest.send({
+      name: "test/hello-world",
+      data: {
+        email: "kbws13@163.com"
+      }
+    })
+
+    return { success: true, message: "Workflow creation triggered." };
+  })
 });
 
 export type AppRouter = typeof appRouter;
