@@ -32,6 +32,67 @@ export const workflowsRouter = createTRPCRouter({
         },
       });
     }),
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        nodes: z.array(
+          z.object({
+            id: z.string(),
+            type: z.string().nullish(),
+            position: z.object({ x: z.number(), y: z.number() }),
+            data: z.record(z.string(), z.any().optional()),
+          })
+        ),
+        edges: z.array(
+          z.object({
+            source: z.string(),
+            target: z.string(),
+            sourcehandle: z.string().nullish(),
+            targethandle: z.string().nullish(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, nodes, edges } = input;
+      const workflow = await prisma.workflow.findUniqueOrThrow({
+        where: { id, userId: ctx.auth.user.id },
+      });
+      return await prisma.$transaction(async (tx) => {
+        await tx.node.deleteMany({
+          where: { workflowId: id },
+        });
+
+        await tx.node.createMany({
+          data: nodes.map((node) => ({
+            id: node.id,
+            workflowId: id,
+            name: node.type || "unknown",
+            type: node.type as NodeType,
+            position: node.position,
+            data: node.data || {},
+          })),
+        });
+
+        await tx.connection.createMany({
+          data: edges.map((edge) => ({
+            workflowId: id,
+            fromNodeId: edge.source,
+            toNodeId: edge.target,
+            fromOutput: edge.sourcehandle || "main",
+            toInput: edge.targethandle || "main",
+          })),
+        });
+
+        await tx.workflow.update({
+          where: { id },
+          data: { updateAt: new Date() },
+        });
+
+        return workflow;
+      });
+    }),
   updateName: protectedProcedure
     .input(z.object({ id: z.string(), name: z.string().min(1) }))
     .mutation(({ ctx, input }) => {
