@@ -23,6 +23,7 @@ import {
   useSuspenseWorkflows,
 } from "../hooks/use-workflows";
 import { useWorkflowsParams } from "../hooks/use-workflows-params";
+
 export const WorkflowSearch = () => {
   const [params, setParams] = useWorkflowsParams();
   const { searchValue, onSearchChange } = useEntitySearch({
