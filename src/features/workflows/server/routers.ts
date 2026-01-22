@@ -1,5 +1,6 @@
 import { PAGINATION } from "@/config/constants";
 import { NodeType } from "@/generated/prisma/enums";
+import { inngest } from "@/inngest/client";
 import prisma from "@/lib/db";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { Edge, Node } from "@xyflow/react";
@@ -7,6 +8,23 @@ import { generateSlug } from "random-word-slugs";
 import z from "zod";
 
 export const workflowsRouter = createTRPCRouter({
+  execute: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const workflow = await prisma.workflow.findFirstOrThrow({
+        where: {
+          id: input.id,
+          userId: ctx.auth.user.id,
+        },
+      });
+
+      await inngest.send({
+        name: "workflows/execute.workflow",
+        data: { workflowId: input.id },
+      });
+
+      return workflow;
+    }),
   create: protectedProcedure.mutation(({ ctx }) => {
     return prisma.workflow.create({
       data: {
@@ -42,17 +60,17 @@ export const workflowsRouter = createTRPCRouter({
             type: z.string().nullish(),
             position: z.object({ x: z.number(), y: z.number() }),
             data: z.record(z.string(), z.any().optional()),
-          })
+          }),
         ),
         edges: z.array(
           z.object({
             source: z.string(),
             target: z.string(),
-            sourcehandle: z.string().nullish(),
-            targethandle: z.string().nullish(),
-          })
+            sourceHandle: z.string().nullish(),
+            targetHandle: z.string().nullish(),
+          }),
         ),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, nodes, edges } = input;
@@ -80,8 +98,8 @@ export const workflowsRouter = createTRPCRouter({
             workflowId: id,
             fromNodeId: edge.source,
             toNodeId: edge.target,
-            fromOutput: edge.sourcehandle || "main",
-            toInput: edge.targethandle || "main",
+            fromOutput: edge.sourceHandle || "main",
+            toInput: edge.targetHandle || "main",
           })),
         });
 
@@ -149,7 +167,7 @@ export const workflowsRouter = createTRPCRouter({
           .max(PAGINATION.MAX_PAGE_SIZE)
           .default(PAGINATION.DEFAULT_PAGE_SIZE),
         search: z.string().default(""),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { page, pageSize, search } = input;
