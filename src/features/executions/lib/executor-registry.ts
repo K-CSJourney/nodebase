@@ -4,6 +4,7 @@ import { stripeTriggerExecutor } from "@/features/trigger/components/stripe-trig
 import { NodeType } from "@/generated/prisma/enums";
 import { httpRequestExecutor } from "../components/http-request/executors";
 import { NodeExecutor } from "../type";
+import { geminiExecutor } from "../components/gemini/executors";
 
 export const executorRegistry: Record<NodeType, NodeExecutor> = {
   [NodeType.INITIAL]: manualTriggerExecutor,
@@ -11,6 +12,9 @@ export const executorRegistry: Record<NodeType, NodeExecutor> = {
   [NodeType.HTTP_REQUEST]: httpRequestExecutor,
   [NodeType.GOOGLE_FORM_TRIGGER]: googleFormTriggerExecutor,
   [NodeType.STRIPE_TRIGGER]: stripeTriggerExecutor,
+  [NodeType.GEMINI]: geminiExecutor,
+  [NodeType.OPENAI]: geminiExecutor,
+  [NodeType.ANTHROPIC]: geminiExecutor,
 };
 
 export const getExecutor = (type: NodeType): NodeExecutor => {

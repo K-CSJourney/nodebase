@@ -1,15 +1,13 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { inngest } from "./client";
-import { NonRetriableError } from "inngest";
-import prisma from "@/lib/db";
-import { topologicalSort } from "./utils";
 import { getExecutor } from "@/features/executions/lib/executor-registry";
+import prisma from "@/lib/db";
+import { NonRetriableError } from "inngest";
+import { geminiChannel } from "./channels/gemini";
+import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
-import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 import { stripeTriggerChannel } from "./channels/stripe-trigger";
-
-const google = createGoogleGenerativeAI({});
+import { inngest } from "./client";
+import { topologicalSort } from "./utils";
 
 export const executeWorkflow = inngest.createFunction(
   { id: "execute-workflow" },
@@ -20,6 +18,7 @@ export const executeWorkflow = inngest.createFunction(
       manualTriggerChannel(),
       googleFormTriggerChannel(),
       stripeTriggerChannel(),
+      geminiChannel(),
     ],
   },
   async ({ event, step, publish }) => {
