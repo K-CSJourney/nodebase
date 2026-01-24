@@ -11,8 +11,8 @@ Handlebars.registerHelper("json", (context) => {
 });
 
 type HttpRequestData = {
-  variableName: string;
-  endpoint: string;
+  variableName?: string;
+  endpoint?: string;
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: string;
 };
@@ -82,7 +82,7 @@ export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
 
       return {
         ...context,
-        [data.variableName]: responsePayload,
+        [data.variableName!]: responsePayload,
       };
     });
 
