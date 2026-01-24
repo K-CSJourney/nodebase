@@ -171,7 +171,7 @@ export const HttpRequestDialog = ({
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="endpoint"
               render={({ field }) => (
@@ -190,7 +190,7 @@ export const HttpRequestDialog = ({
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
             {showBodyField && (
               <FormField
                 control={form.control}
